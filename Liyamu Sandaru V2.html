@@ -1,0 +1,576 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liyamu Sandaru V 1.2 - Post Creator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Pothana&family=Noto+Sans+Sinhala:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Noto Sans Sinhala', sans-serif;
+            background-color: #0f172a;
+            color: #f3f4f6;
+            user-select: none;
+        }
+        
+        /* Export Layout Layout */
+        .post-layout {
+            display: flex;
+            flex-direction: column;
+            background: white;
+            width: 1080px;
+            height: 1080px;
+            overflow: hidden;
+            position: relative;
+        }
+
+        /* Image Display Area */
+        .img-box {
+            display: flex;
+            height: 432px; 
+            min-height: 432px;
+            background: #eee;
+            border-bottom: 8px solid #ef4444; 
+            overflow: hidden;
+            position: relative;
+            z-index: 1;
+        }
+
+        .image-container {
+            flex: 1;
+            height: 100%;
+            border-right: 2px solid #fff;
+            background-size: cover;
+            background-repeat: no-repeat;
+            background-position: center;
+            cursor: move;
+            touch-action: none;
+        }
+
+        .image-container:last-child { border-right: none; }
+
+        /* Text Area */
+        .txt-box {
+            height: 648px; 
+            min-height: 648px;
+            padding: 40px 60px;
+            display: flex;
+            flex-direction: column;
+            background-color: white;
+            position: relative;
+            z-index: 2;
+        }
+
+        .main-text-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            margin-bottom: 60px;
+            gap: 15px;
+            width: 100%;
+        }
+
+        .main-text {
+            font-family: 'Pothana', serif;
+            color: #111;
+            font-weight: normal;
+            line-height: 1.5;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-align: center;
+            width: 100%;
+        }
+
+        .sub-text {
+            font-family: 'Noto Sans Sinhala', sans-serif;
+            color: #444;
+            font-weight: normal;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            text-align: center;
+            width: 90%;
+            opacity: 0.9;
+        }
+
+        .credit-text {
+            position: absolute;
+            bottom: 50px; 
+            left: 0;
+            right: 0;
+            font-family: 'Pothana', serif;
+            font-size: 32px;
+            color: #555;
+            text-align: center;
+            pointer-events: none;
+            width: 100%;
+        }
+
+        .logo-overlay {
+            position: absolute;
+            z-index: 100;
+            cursor: move;
+            touch-action: none;
+            width: 120px;
+        }
+        .logo-overlay img {
+            width: 100%;
+            height: auto;
+            pointer-events: none;
+            display: block;
+        }
+
+        /* Preview UI Scaling */
+        .preview-container {
+            width: 486px; 
+            height: 486px;
+            background: white;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 0 25px 60px rgba(0,0,0,0.3);
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .ui-img-box { height: 194.4px; min-height: 194.4px; border-bottom-width: 3.6px !important; } 
+        .ui-txt-box { height: 291.6px; min-height: 291.6px; padding: 20px 30px; }
+        .ui-credit { bottom: 22.5px; font-size: 14.4px; }
+        .ui-img-container { border-right-width: 0.9px !important; }
+        .ui-logo { width: 54px; }
+        .ui-main-text-area { gap: 8px; margin-bottom: 27px; }
+
+        /* Ensuring capture area is off-screen but capture-able */
+        #hidden-capture {
+            position: fixed;
+            left: -2000px;
+            top: -2000px;
+            width: 1080px;
+            height: 1080px;
+            z-index: -1000;
+            overflow: hidden;
+        }
+
+        input[type="range"] { accent-color: #ef4444; }
+        
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: #1e293b; }
+        ::-webkit-scrollbar-thumb { background: #475569; border-radius: 10px; }
+        ::-webkit-scrollbar-thumb:hover { background: #ef4444; }
+    </style>
+</head>
+<body class="p-4 md:p-8">
+
+    <div class="max-w-7xl mx-auto">
+        <header class="mb-10 text-center">
+            <h1 class="text-4xl font-black text-white mb-2 tracking-tighter">LIYAMU SANDARU <span class="text-red-500">V 1.2</span></h1>
+            <p class="text-slate-500 font-bold text-[10px] uppercase tracking-[0.4em]">Professional Social Media Post Designer</p>
+        </header>
+
+        <div class="flex flex-col lg:flex-row gap-10 justify-center items-start">
+            
+            <!-- Controls -->
+            <div class="w-full lg:w-[450px] bg-slate-900 p-8 rounded-[2.5rem] shadow-2xl border border-slate-800 h-[80vh] overflow-y-auto">
+                <div class="space-y-8">
+                    
+                    <div>
+                        <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">1. Upload Background Photos</label>
+                        <div class="relative group">
+                            <input type="file" id="imageInput" multiple accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                            <div class="w-full flex items-center justify-center gap-3 px-4 py-5 bg-slate-800 border-2 border-dashed border-slate-700 rounded-2xl group-hover:border-red-500 group-hover:bg-red-500/5 transition-all">
+                                <svg class="w-6 h-6 text-slate-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"></path></svg>
+                                <span id="file-name-display" class="text-sm font-bold text-slate-300 truncate">Select Images...</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="p-5 bg-slate-950/50 rounded-3xl border border-slate-800 space-y-6">
+                        <div>
+                            <div class="flex justify-between mb-2">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-red-500">2. Adjust Photo</label>
+                                <span class="text-[10px] font-bold text-slate-500">ZOOM</span>
+                            </div>
+                            <input type="range" id="zoomSlider" min="1" max="4" step="0.05" value="1" class="w-full h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                        </div>
+                        
+                        <div class="pt-4 border-t border-slate-800">
+                            <div class="flex justify-between items-center mb-3">
+                                <label class="text-[10px] font-black uppercase tracking-widest text-slate-400">Logo Settings</label>
+                                <label class="relative inline-flex items-center cursor-pointer">
+                                    <input type="checkbox" id="logoToggle" class="sr-only peer" checked>
+                                    <div class="w-9 h-5 bg-slate-700 rounded-full peer peer-checked:bg-red-600 after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:after:translate-x-full"></div>
+                                </label>
+                            </div>
+                            <div class="space-y-4">
+                                <div class="flex gap-4 items-center">
+                                    <input type="range" id="logoSizeSlider" min="30" max="400" value="120" class="flex-1 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                                    <span class="text-[10px] font-bold text-slate-500">SIZE</span>
+                                </div>
+                                <div class="relative group">
+                                    <input type="file" id="logoInput" accept="image/*" class="absolute inset-0 w-full h-full opacity-0 cursor-pointer z-10">
+                                    <div class="w-full flex items-center justify-center gap-2 py-2 bg-slate-800 border border-slate-700 rounded-xl group-hover:border-red-500 transition-all">
+                                        <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M12 4v16m8-8H4"></path></svg>
+                                        <span class="text-[10px] font-bold text-slate-400 uppercase">Custom Logo</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="space-y-6">
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">3. Main Quote</label>
+                            <div class="flex gap-4 mb-3 items-center">
+                                <input type="range" id="fontSizeSlider" min="20" max="150" value="44" class="flex-1 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                                <span class="text-[10px] font-bold text-slate-500">SIZE</span>
+                            </div>
+                            <textarea id="mainTextInput" rows="3" class="w-full p-4 bg-slate-800 border border-slate-700 text-white rounded-2xl outline-none text-sm focus:ring-2 focus:ring-red-600 transition-all" placeholder="Type quote..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">4. Story (Sub-Text)</label>
+                            <div class="flex gap-4 mb-3 items-center">
+                                <input type="range" id="subFontSizeSlider" min="10" max="100" value="26" class="flex-1 h-1.5 bg-slate-800 rounded-lg appearance-none cursor-pointer">
+                                <span class="text-[10px] font-bold text-slate-500">SIZE</span>
+                            </div>
+                            <textarea id="subTextInput" rows="4" class="w-full p-4 bg-slate-800 border border-slate-700 text-white rounded-2xl outline-none text-sm focus:ring-2 focus:ring-red-600 transition-all" placeholder="Type story..."></textarea>
+                        </div>
+
+                        <div>
+                            <label class="block text-[10px] font-black uppercase tracking-widest text-slate-400 mb-3">5. Credit Name</label>
+                            <select id="creditSelect" class="w-full p-4 bg-slate-800 border border-slate-700 text-white rounded-2xl outline-none text-sm cursor-pointer hover:border-red-600">
+                                <option value="-Digamadulla-">-Digamadulla-</option>
+                                <option value="-The Status-">-The Status-</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <button id="downloadBtn" class="w-full bg-red-600 hover:bg-red-700 text-white font-black py-5 rounded-2xl transition shadow-[0_10px_30px_rgba(220,38,38,0.3)] flex items-center justify-center gap-3 active:scale-95">
+                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"></path></svg>
+                        <span>EXPORT 1080px POST</span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Preview Canvas -->
+            <div class="flex-1 flex flex-col items-center">
+                <div id="ui-preview" class="preview-container ring-8 ring-slate-900 rounded-2xl overflow-hidden">
+                    <div id="ui-logo" class="logo-overlay ui-logo">
+                        <img id="ui-logo-img" crossorigin="anonymous" src="https://lh3.googleusercontent.com/d/1uYuefcCvKkGmwwn2vbi3v0BcMk69hbOH" alt="Logo">
+                    </div>
+
+                    <div id="ui-imageDisplay" class="img-box ui-img-box">
+                        <div class="flex items-center justify-center text-slate-400 text-center p-10 h-full w-full italic text-[10px]">Select photos to begin...</div>
+                    </div>
+                    
+                    <div class="txt-box ui-txt-box">
+                        <div class="main-text-area ui-main-text-area">
+                            <div id="ui-mainText" class="main-text">ප්‍රධාන වැකිය මෙතැන දිස්වේ.</div>
+                            <div id="ui-subText" class="sub-text"></div>
+                        </div>
+                        <div id="ui-credit" class="credit-text ui-credit">-Digamadulla-</div>
+                    </div>
+                </div>
+                <div class="mt-8 text-center space-y-2">
+                    <p class="text-[10px] font-black uppercase tracking-[0.4em] text-slate-600">LIVE CANVAS PREVIEW</p>
+                    <p class="text-xs text-red-500 font-bold italic">💡 Hint: Drag photos horizontally/vertically to adjust.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hidden Capture Target (Kept Off-Canvas permanently) -->
+    <div id="hidden-capture">
+        <div id="final-post" class="post-layout">
+            <div id="final-logo" class="logo-overlay">
+                <img id="final-logo-img" crossorigin="anonymous" src="https://lh3.googleusercontent.com/d/1uYuefcCvKkGmwwn2vbi3v0BcMk69hbOH" alt="Logo">
+            </div>
+            <div id="final-imageDisplay" class="img-box"></div>
+            <div class="txt-box">
+                <div class="main-text-area">
+                    <div id="final-mainText" class="main-text">ප්‍රධාන වැකිය මෙතැන දිස්වේ.</div>
+                    <div id="final-subText" class="sub-text"></div>
+                </div>
+                <div id="final-credit" class="credit-text">-Digamadulla-</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const imageInput = document.getElementById('imageInput');
+        const logoInput = document.getElementById('logoInput');
+        const mainTextInput = document.getElementById('mainTextInput');
+        const subTextInput = document.getElementById('subTextInput');
+        const fontSizeSlider = document.getElementById('fontSizeSlider');
+        const subFontSizeSlider = document.getElementById('subFontSizeSlider');
+        const logoSizeSlider = document.getElementById('logoSizeSlider');
+        const zoomSlider = document.getElementById('zoomSlider');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const creditSelect = document.getElementById('creditSelect');
+        const logoToggle = document.getElementById('logoToggle');
+
+        const uiImgBox = document.getElementById('ui-imageDisplay');
+        const finalImgBox = document.getElementById('final-imageDisplay');
+        const uiTxt = document.getElementById('ui-mainText');
+        const finalTxt = document.getElementById('final-mainText');
+        const uiSubTxt = document.getElementById('ui-subText');
+        const finalSubTxt = document.getElementById('final-subText');
+        const uiCredit = document.getElementById('ui-credit');
+        const finalCredit = document.getElementById('final-credit');
+
+        const uiLogo = document.getElementById('ui-logo');
+        const finalLogo = document.getElementById('final-logo');
+        const uiLogoImg = document.getElementById('ui-logo-img');
+        const finalLogoImg = document.getElementById('final-logo-img');
+
+        const ASSETS = {
+            DIGAMADULLA: "https://lh3.googleusercontent.com/d/1uYuefcCvKkGmwwn2vbi3v0BcMk69hbOH",
+            THESTATUS: "https://lh3.googleusercontent.com/d/1p87_SOnO0S9jA6n7FmZg8u3mB6y9P5A"
+        };
+
+        let imagePositions = [];
+        let logoPos = { x: 920, y: 40 };
+        let currentZoom = 1;
+
+        window.onload = () => {
+            const savedLogoPos = localStorage.getItem('v12_logo_pos_v4');
+            const savedLogoSize = localStorage.getItem('v12_logo_size_v4');
+            const savedLogoVisible = localStorage.getItem('v12_logo_visible_v4');
+
+            if (savedLogoPos) logoPos = JSON.parse(savedLogoPos);
+            if (savedLogoSize) {
+                logoSizeSlider.value = savedLogoSize;
+                updateLogoSize(savedLogoSize);
+            }
+            if (savedLogoVisible !== null) {
+                const isVisible = savedLogoVisible === 'true';
+                logoToggle.checked = isVisible;
+                uiLogo.style.display = isVisible ? 'block' : 'none';
+                finalLogo.style.display = isVisible ? 'block' : 'none';
+            }
+
+            updateLogoUI();
+            updateAllFonts();
+            updateLogoBasedOnCredit();
+        };
+
+        function updateLogoUI() {
+            uiLogo.style.left = (logoPos.x * 0.45) + 'px';
+            uiLogo.style.top = (logoPos.y * 0.45) + 'px';
+            finalLogo.style.left = logoPos.x + 'px';
+            finalLogo.style.top = logoPos.y + 'px';
+        }
+
+        function updateLogoSize(size) {
+            uiLogo.style.width = (size * 0.45) + 'px';
+            finalLogo.style.width = size + 'px';
+        }
+
+        function updateAllFonts() {
+            const mainSize = parseInt(fontSizeSlider.value);
+            const subSize = parseInt(subFontSizeSlider.value);
+            uiTxt.style.fontSize = (mainSize * 0.45) + 'px';
+            finalTxt.style.fontSize = mainSize + 'px';
+            uiSubTxt.style.fontSize = (subSize * 0.45) + 'px';
+            finalSubTxt.style.fontSize = subSize + 'px';
+        }
+
+        function updateLogoBasedOnCredit() {
+            const selected = creditSelect.value;
+            const customKey = 'v12_custom_logo_' + selected.replace(/-/g, '');
+            const savedCustom = localStorage.getItem(customKey);
+            const logoUrl = savedCustom || (selected === "-The Status-" ? ASSETS.THESTATUS : ASSETS.DIGAMADULLA);
+            uiLogoImg.src = logoUrl;
+            finalLogoImg.src = logoUrl;
+        }
+
+        logoInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(event) {
+                    const base64 = event.target.result;
+                    const selected = creditSelect.value;
+                    localStorage.setItem('v12_custom_logo_' + selected.replace(/-/g, ''), base64);
+                    updateLogoBasedOnCredit();
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        imageInput.addEventListener('change', function(e) {
+            const files = Array.from(e.target.files);
+            if (files.length > 0) {
+                document.getElementById('file-name-display').textContent = files.length > 1 ? files.length + " photos selected" : files[0].name;
+                uiImgBox.innerHTML = '';
+                finalImgBox.innerHTML = '';
+                imagePositions = [];
+                
+                files.forEach((file, index) => {
+                    const reader = new FileReader();
+                    reader.onload = function(event) {
+                        const src = event.target.result;
+                        imagePositions[index] = { x: 50, y: 50 };
+                        
+                        const createImgDiv = (isUI) => {
+                            const div = document.createElement('div');
+                            div.className = isUI ? 'image-container ui-img-container' : 'image-container';
+                            div.style.backgroundImage = `url(${src})`;
+                            div.style.backgroundSize = `${currentZoom * 100}%`;
+                            div.style.backgroundPosition = '50% 50%';
+                            if (isUI) setupDrag(div, index);
+                            return div;
+                        };
+
+                        uiImgBox.appendChild(createImgDiv(true));
+                        finalImgBox.appendChild(createImgDiv(false));
+                    };
+                    reader.readAsDataURL(file);
+                });
+            }
+        });
+
+        zoomSlider.addEventListener('input', (e) => {
+            currentZoom = parseFloat(e.target.value);
+            const updateZoom = (box) => {
+                box.querySelectorAll('.image-container').forEach(div => {
+                    div.style.backgroundSize = `${currentZoom * 100}% auto`;
+                });
+            };
+            updateZoom(uiImgBox);
+            updateZoom(finalImgBox);
+        });
+
+        function setupDrag(el, index) {
+            let isDragging = false;
+            let startY, startX, currentY, currentX;
+
+            const onStart = (e) => {
+                isDragging = true;
+                const point = e.type.includes('touch') ? e.touches[0] : e;
+                startY = point.clientY;
+                startX = point.clientX;
+                currentY = imagePositions[index].y;
+                currentX = imagePositions[index].x;
+            };
+
+            const onMove = (e) => {
+                if (!isDragging) return;
+                e.preventDefault();
+                const point = e.type.includes('touch') ? e.touches[0] : e;
+                const diffY = point.clientY - startY;
+                const diffX = point.clientX - startX;
+
+                const moveSensitivity = 0.15 / currentZoom;
+                let newX = Math.max(0, Math.min(100, currentX - (diffX * moveSensitivity)));
+                let newY = Math.max(0, Math.min(100, currentY - (diffY * moveSensitivity)));
+
+                imagePositions[index].x = newX;
+                imagePositions[index].y = newY;
+
+                const posStr = `${newX}% ${newY}%`;
+                el.style.backgroundPosition = posStr;
+                const finalDivs = finalImgBox.querySelectorAll('.image-container');
+                if (finalDivs[index]) finalDivs[index].style.backgroundPosition = posStr;
+            };
+
+            const onEnd = () => isDragging = false;
+            el.addEventListener('mousedown', onStart);
+            el.addEventListener('touchstart', onStart, { passive: false });
+            window.addEventListener('mousemove', onMove);
+            window.addEventListener('touchmove', onMove, { passive: false });
+            window.addEventListener('mouseup', onEnd);
+            window.addEventListener('touchend', onEnd);
+        }
+
+        // Logo Dragging
+        const onLogoStart = (e) => {
+            uiLogo.isDragging = true;
+            const pt = e.type.includes('touch') ? e.touches[0] : e;
+            uiLogo.startY = pt.clientY;
+            uiLogo.startX = pt.clientX;
+            uiLogo.currY = logoPos.y;
+            uiLogo.currX = logoPos.x;
+        };
+        const onLogoMove = (e) => {
+            if (!uiLogo.isDragging) return;
+            const pt = e.type.includes('touch') ? e.touches[0] : e;
+            const dy = (pt.clientY - uiLogo.startY) / 0.45;
+            const dx = (pt.clientX - uiLogo.startX) / 0.45;
+            logoPos.x = Math.max(0, Math.min(1080 - finalLogo.offsetWidth, uiLogo.currX + dx));
+            logoPos.y = Math.max(0, Math.min(1080 - finalLogo.offsetHeight, uiLogo.currY + dy));
+            updateLogoUI();
+            localStorage.setItem('v12_logo_pos_v4', JSON.stringify(logoPos));
+        };
+        const onLogoEnd = () => uiLogo.isDragging = false;
+
+        uiLogo.addEventListener('mousedown', onLogoStart);
+        uiLogo.addEventListener('touchstart', onLogoStart, { passive: false });
+        window.addEventListener('mousemove', onLogoMove);
+        window.addEventListener('touchmove', onLogoMove, { passive: false });
+        window.addEventListener('mouseup', onLogoEnd);
+        window.addEventListener('touchend', onLogoEnd);
+
+        mainTextInput.addEventListener('input', () => {
+            const val = mainTextInput.value || "ප්‍රධාන වැකිය මෙතැන දිස්වේ.";
+            uiTxt.textContent = val;
+            finalTxt.textContent = val;
+        });
+        subTextInput.addEventListener('input', () => {
+            uiSubTxt.textContent = subTextInput.value;
+            finalSubTxt.textContent = subTextInput.value;
+        });
+        fontSizeSlider.addEventListener('input', updateAllFonts);
+        subFontSizeSlider.addEventListener('input', updateAllFonts);
+        logoSizeSlider.addEventListener('input', (e) => {
+            const s = parseInt(e.target.value);
+            updateLogoSize(s);
+            localStorage.setItem('v12_logo_size_v4', s);
+        });
+        logoToggle.addEventListener('change', (e) => {
+            const vis = e.target.checked;
+            uiLogo.style.display = vis ? 'block' : 'none';
+            finalLogo.style.display = vis ? 'block' : 'none';
+            localStorage.setItem('v12_logo_visible_v4', vis);
+        });
+        creditSelect.addEventListener('change', (e) => {
+            uiCredit.textContent = e.target.value;
+            finalCredit.textContent = e.target.value;
+            updateLogoBasedOnCredit();
+        });
+
+        downloadBtn.addEventListener('click', () => {
+            const target = document.getElementById('final-post');
+            downloadBtn.innerHTML = '<span class="animate-pulse">Capturing High Quality...</span>';
+            downloadBtn.disabled = true;
+            
+            // html2canvas works fine on elements hidden with negative positioning
+            // without needing to make them visible or fixed at (0,0)
+            html2canvas(target, {
+                scale: 2,
+                useCORS: true,
+                width: 1080,
+                height: 1080,
+                backgroundColor: "#ffffff",
+                logging: false,
+                allowTaint: true
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = `LiyamuSandaru_V1.2_${new Date().getTime()}.png`;
+                link.href = canvas.toDataURL('image/png', 1.0);
+                link.click();
+                downloadBtn.innerHTML = 'EXPORT 1080px POST';
+                downloadBtn.disabled = false;
+            }).catch(err => {
+                console.error("Capture Error:", err);
+                downloadBtn.innerHTML = 'Error! Try again.';
+                downloadBtn.disabled = false;
+            });
+        });
+    </script>
+</body>
+</html>
